@@ -13,11 +13,11 @@ An MCP server that lets coding agents manage **and play** a running SillyTavern 
 
 不装连接器也能用全部读写功能；装了连接器才解锁 `play_*` 陪玩工具。
 
-## 工具一览（20 个）
+## 工具一览（21 个）
 
 **管理组**：`st_status` `list_characters` `get_character` `edit_character`（自动同步顶层+data.* 两份副本）`merge_character_data` `list_worldbooks` `get_worldbook`（summary 模式省 token）`upsert_worldbook_entry` `delete_worldbook_entry` `delete_worldbook`（需 confirm）`list_chats` `get_chat`
 
-**陪玩组**：`play_status` `play_send`（以用户身份发消息并等回复，完整走预设/世界书/正则管线）`play_trigger` `play_recent_messages` `play_list_presets` `play_set_preset` `play_set_model` `play_stscript`（STScript 万能后门）
+**陪玩组**：`play_status` `play_send`（以用户身份发消息并等回复，完整走预设/世界书/正则管线）`play_trigger` `play_recent_messages` `play_get_prompt`（⭐**提示词 X 光机**：捕获每次真正发给 LLM 的完整组装提示词——含用户手动生成的——验证世界书激活/插入顺序/标签结构；summary 模式省 token，search 定位条目，index 取单条全文）`play_list_presets` `play_set_preset` `play_set_model` `play_stscript`（STScript 万能后门）
 
 ## 安装
 

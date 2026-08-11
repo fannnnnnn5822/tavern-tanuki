@@ -1,6 +1,6 @@
 {
   "name": "tavern-tanuki",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "酒馆小狸 — MCP server that lets coding agents (Claude Code, Cursor, Codex...) manage AND play a running SillyTavern instance: characters, worldbooks, chats, presets. | 让 AI 编程助手直接读写并陪玩正在运行的酒馆。",
   "type": "module",
   "bin": {

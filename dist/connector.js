@@ -1,5 +1,5 @@
 // ============================================================
-// 小狸连接器 v0.2.0
+// 小狸连接器 v0.3.0
 // 让 AI 编程助手（Claude Code 等）通过 tavern-tanuki MCP 服务器
 // 在酒馆里替你跑堂：代发消息、触发回复、切预设、切模型。
 //
@@ -59,6 +59,33 @@
     });
   }
 
+  // ---------- 提示词捕获（X光机） ----------
+  // 监听酒馆"提示词就绪"事件，抓下每次真正发给 LLM 的完整组装结果。
+  // dryRun（token 计数）跳过；聊天补全和文本补全两种模式都接。
+  let lastPrompt = null;
+
+  eventOn(tavern_events.CHAT_COMPLETION_PROMPT_READY, (data) => {
+    try {
+      if (!data || data.dryRun) return;
+      lastPrompt = {
+        kind: 'chat_completion',
+        at: new Date().toISOString(),
+        messages: JSON.parse(JSON.stringify(data.messages ?? [])),
+      };
+    } catch (e) { console.warn('[小狸] 提示词捕获失败', e); }
+  });
+
+  eventOn(tavern_events.GENERATE_AFTER_COMBINE_PROMPTS, (data) => {
+    try {
+      if (!data || data.dryRun) return;
+      lastPrompt = {
+        kind: 'text_completion',
+        at: new Date().toISOString(),
+        messages: [{ role: 'combined', content: String(data.prompt ?? '') }],
+      };
+    } catch (e) { console.warn('[小狸] 提示词捕获失败', e); }
+  });
+
   // ---------- 指令处理 ----------
 
   const handlers = {
@@ -113,6 +140,44 @@
       const pipe = await triggerSlash(script);
       return { pipe: pipe ?? null };
     },
+
+    async prompt({ mode = 'summary', search, index }) {
+      if (!lastPrompt) {
+        throw new Error('还没捕获到提示词——先生成一次（play_send，或你自己在酒馆里发一条消息）');
+      }
+      const { kind, at, messages } = lastPrompt;
+      const total_chars = messages.reduce((s, m) => s + (m.content?.length ?? 0), 0);
+      const base = { kind, captured_at: at, message_count: messages.length, total_chars };
+
+      if (typeof index === 'number') {
+        const m = messages[index];
+        if (!m) throw new Error(`没有第 ${index} 条消息（共 ${messages.length} 条）`);
+        return { ...base, index, role: m.role, name: m.name, content: m.content };
+      }
+      if (search) {
+        const matches = [];
+        messages.forEach((m, i) => {
+          const c = m.content ?? '';
+          let pos = c.indexOf(search);
+          while (pos !== -1 && matches.length < 10) {
+            matches.push({ index: i, role: m.role, pos, context: c.slice(Math.max(0, pos - 100), pos + search.length + 100) });
+            pos = c.indexOf(search, pos + 1);
+          }
+        });
+        return { ...base, search, match_count: matches.length, matches };
+      }
+      if (mode === 'full') {
+        return { ...base, messages };
+      }
+      return {
+        ...base,
+        messages: messages.map((m, i) => ({
+          i, role: m.role, name: m.name || undefined,
+          chars: m.content?.length ?? 0,
+          head: (m.content ?? '').slice(0, 120),
+        })),
+      };
+    },
   };
 
   // ---------- WebSocket 连接 ----------
@@ -130,7 +195,7 @@
         toastr.success('已连接 AI 编程助手', '酒馆小狸');
         announced = true;
       }
-      ws.send(JSON.stringify({ type: 'hello', agent: 'tanuki-connector', version: '0.2.0' }));
+      ws.send(JSON.stringify({ type: 'hello', agent: 'tanuki-connector', version: '0.3.0' }));
     };
 
     ws.onmessage = async (ev) => {

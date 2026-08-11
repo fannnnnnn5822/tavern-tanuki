@@ -17,7 +17,7 @@ import { Bridge } from './bridge.js';
 const st = new STClient();
 const bridge = new Bridge();
 
-const server = new McpServer({ name: 'tavern-tanuki', version: '0.2.0' });
+const server = new McpServer({ name: 'tavern-tanuki', version: '0.3.0' });
 
 /** Wrap a handler: JSON-stringify results, surface errors as tool errors. */
 function tool(name, description, inputSchema, handler) {
@@ -396,6 +396,17 @@ tool(
     name: z.string().describe('Model name/id'),
   },
   async ({ name }) => bridge.call('model', { name }),
+);
+
+tool(
+  'play_get_prompt',
+  'X-ray the LAST prompt actually sent to the LLM (captured on every generation — including ones the user triggers manually in the browser). Verify worldbook entries fired, insertion order, tag structure. Default summary lists每条消息的 role/长度/前120字; search finds a substring (e.g. a worldbook entry\'s distinctive text) and returns matching positions with context; index returns one message\'s full content; mode:"full" dumps everything (token-heavy).',
+  {
+    mode: z.enum(['summary', 'full']).optional(),
+    search: z.string().optional().describe('Substring to locate in the prompt, e.g. distinctive text from a worldbook entry'),
+    index: z.number().optional().describe('Return full content of this message index'),
+  },
+  async ({ mode, search, index }) => bridge.call('prompt', { mode, search, index }, 30_000),
 );
 
 tool(

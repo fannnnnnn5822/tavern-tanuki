@@ -42,7 +42,9 @@ An MCP server that lets coding agents manage **and play** a running SillyTavern 
 }
 ```
 
-3. （可选，陪玩用）在酒馆助手 → 脚本库 → 导入，选择 `tavern-script/酒馆小狸连接器.json`。连接成功酒馆会弹「已连接 AI 编程助手」。（`小狸连接器.js` 是源码，改完跑 `node scripts/build-connector-json.mjs` 重新打包）
+3. （可选，陪玩用）在酒馆助手 → 脚本库 → 导入，选择 `tavern-script/酒馆小狸连接器.json`。连接成功酒馆会弹「已连接 AI 编程助手」。
+
+导入的是一个轻量加载器：真正的连接器本体托管在本仓库 `dist/connector.js`，由 jsDelivr 分发、Supabase 版本指针控制——**导入一次，之后每次更新自动生效**，不用重新导入。想审代码就看 `dist/connector.js`（这就是实际在你酒馆里运行的全部代码）。
 
 环境变量：`ST_BRIDGE_PORT` 可改陪玩桥端口（默认 6700，只监听 127.0.0.1）。
 
@@ -55,8 +57,11 @@ An MCP server that lets coding agents manage **and play** a running SillyTavern 
 ## 开发
 
 ```bash
-node smoke.mjs   # 端到端冒烟测试（写操作只碰临时世界书和复制卡，测完清理）
+ST_USER=... ST_PASSWORD=... node smoke.mjs   # 端到端冒烟测试（写操作只碰临时世界书和复制卡，测完清理）
+node 发版.mjs "改动说明"                      # 维护者发版：打包→push→切 Supabase 版本指针，玩家刷新即新版
 ```
+
+连接器结构：`tavern-script/loader.js`（加载器，打包成可导入 JSON）→ 按 Supabase `sb_config.tanuki_script_ref` 指针从 jsDelivr 拉取 `dist/connector.js`（本体）。指针指向具体提交号，`@提交号` 是全新 URL 必定回源，绕开 CDN 12 小时缓存实现发版秒切；指针失联时退回 `@main`。
 
 ## 安全性
 

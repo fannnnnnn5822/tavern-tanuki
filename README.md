@@ -9,7 +9,7 @@ An MCP server that lets coding agents manage **and play** a running SillyTavern 
 | 部件 | 装在哪 | 作用 |
 |---|---|---|
 | **MCP 服务器**（本仓库） | AI 编程助手侧（如 Claude Code 的 `.mcp.json`） | 读写卡/世界书/聊天，全走酒馆 HTTP API |
-| **小狸连接器**（`tavern-script/小狸连接器.js`，可选） | 酒馆侧：酒馆助手 → 脚本库 → 新建脚本粘贴启用 | 陪玩功能：代发消息/触发生成/切预设切模型 |
+| **小狸连接器**（`tavern-script/酒馆小狸连接器.json`，可选） | 酒馆侧：酒馆助手 → 脚本库 → **导入**此 JSON 文件 | 陪玩功能：代发消息/触发生成/切预设切模型 |
 
 不装连接器也能用全部读写功能；装了连接器才解锁 `play_*` 陪玩工具。
 
@@ -42,7 +42,7 @@ An MCP server that lets coding agents manage **and play** a running SillyTavern 
 }
 ```
 
-3. （可选，陪玩用）把 `tavern-script/小狸连接器.js` 的内容粘进酒馆助手脚本库并启用。连接成功酒馆会弹「已连接 AI 编程助手」。
+3. （可选，陪玩用）在酒馆助手 → 脚本库 → 导入，选择 `tavern-script/酒馆小狸连接器.json`。连接成功酒馆会弹「已连接 AI 编程助手」。（`小狸连接器.js` 是源码，改完跑 `node scripts/build-connector-json.mjs` 重新打包）
 
 环境变量：`ST_BRIDGE_PORT` 可改陪玩桥端口（默认 6700，只监听 127.0.0.1）。
 
